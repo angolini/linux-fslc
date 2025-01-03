@@ -1802,6 +1802,9 @@ int enetc_xdp_xmit(struct net_device *ndev, int num_frames,
 	if (unlikely(!xdp_redirect_arr))
 		return -ENOMEM;
 
+	if (unlikely(test_bit(ENETC_TX_DOWN, &priv->flags)))
+		return -ENETDOWN;
+
 	enetc_lock_mdio();
 
 	ring_index = priv->shared_tx_rings ? cpu % priv->num_tx_rings : cpu;
@@ -2823,7 +2826,6 @@ static void enetc_disable_tx_bdrs(struct enetc_ndev_priv *priv)
 
 	for (i = 0; i < priv->num_tx_rings; i++)
 		enetc_disable_txbdr(hw, priv->tx_ring[i]);
-
 }
 
 static void enetc_wait_txbdr(struct enetc_hw *hw, struct enetc_bdr *tx_ring)
